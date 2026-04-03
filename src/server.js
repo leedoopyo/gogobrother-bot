@@ -17,7 +17,10 @@ const auth = new google.auth.GoogleAuth({
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
     private_key: process.env.GOOGLE_PRIVATE_KEY
-      ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n")
+      ? process.env.GOOGLE_PRIVATE_KEY
+          .replace(/\\n/g, "\n")   // \n 텍스트 → 줄바꿈
+          .replace(/^'|'$/g, "")   // 앞뒤 작은따옴표 제거
+          .replace(/^"|"$/g, "")   // 앞뒤 큰따옴표 제거
       : "",
   },
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
