@@ -21,6 +21,20 @@ function kakaoResponse(text) {
   };
 }
 
+function kakaoImageResponse(imageUrl, altText) {
+  return {
+    version: '2.0',
+    template: {
+      outputs: [{
+        simpleImage: {
+          imageUrl,
+          altText,
+        }
+      }]
+    }
+  };
+}
+
 async function handleWebhook(req, res) {
   try {
     const userId =
@@ -127,8 +141,20 @@ async function handleWebhook(req, res) {
     if (session.state === 'VIEW_MENU_DETAIL') {
       const menu = await getMenuDetail(session.selectedCategory, session.selectedDay);
       if (!menu) return res.json(kakaoResponse('메뉴를 찾을 수 없습니다.'));
-      if (text === '1') return res.json(kakaoResponse(menu.flyer_url ? `📸 카드뉴스\n${menu.flyer_url}` : '카드뉴스가 아직 준비되지 않았습니다.'));
-      if (text === '2') return res.json(kakaoResponse(menu.shorts_url ? `🎬 Shorts\n${menu.shorts_url}` : 'Shorts가 아직 준비되지 않았습니다.'));
+
+      if (text === '1') {
+        if (!menu.flyer_url) {
+          return res.json(kakaoResponse('카드뉴스가 아직 준비되지 않았습니다.'));
+        }
+        return res.json(kakaoImageResponse(menu.flyer_url, menu.menu_name));
+      }
+
+      if (text === '2') {
+        return res.json(kakaoResponse(
+          menu.shorts_url ? `🎬 Shorts\n${menu.shorts_url}` : 'Shorts가 아직 준비되지 않았습니다.'
+        ));
+      }
+
       if (text === '3') {
         const formUrl = buildOrderFormUrl({
           region1: session.region1,
@@ -140,6 +166,7 @@ async function handleWebhook(req, res) {
         updateSession(userId, { state: 'READY_TO_ORDER' });
         return res.json(kakaoResponse(orderConfirmMessage(session, formUrl)));
       }
+
       return res.json(kakaoResponse('올바른 번호를 입력해주세요.'));
     }
 
