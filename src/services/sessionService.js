@@ -18,8 +18,11 @@ function updateSession(userId, patch) {
   return next;
 }
 
-function resetSession(userId) {
-  sessions.set(userId, _defaultSession(userId));
+function resetSession(userId, isOrderComplete = false) {
+  sessions.set(userId, {
+    ..._defaultSession(userId),
+    isFirstVisit: isOrderComplete ? true : false,
+  });
   return sessions.get(userId);
 }
 
@@ -27,6 +30,7 @@ function _defaultSession(userId) {
   return {
     userId,
     state: 'MAIN',
+    isFirstVisit: true,
     region1: null,
     region2: null,
     apartmentName: null,
