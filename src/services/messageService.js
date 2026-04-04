@@ -8,9 +8,22 @@ function formatNumberedList(title, items) {
   return lines.join('\n');
 }
 
+function welcomeMessage() {
+  return [
+    '안녕하세요 고객님! 🙌',
+    '전국맛집을 고객님 댁으로~',
+    '고고브라더입니다! 🚀',
+    '',
+    '1. 주문 시작',
+    '2. 금주 진행 메뉴',
+    '3. 주문 방법',
+    '4. 상담 연결',
+  ].join('\n');
+}
+
 function mainMenuMessage() {
   return [
-    '안녕하세요. 고고브라더입니다.',
+    '처음으로 돌아왔습니다.',
     '',
     '1. 주문 시작',
     '2. 금주 진행 메뉴',
@@ -61,6 +74,7 @@ function orderConfirmMessage(session, formUrl) {
 
 module.exports = {
   formatNumberedList,
+  welcomeMessage,
   mainMenuMessage,
   helpMessage,
   menuDetailMessage,
