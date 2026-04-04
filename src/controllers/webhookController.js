@@ -4,6 +4,7 @@ const { listCategories, listDaysByCategory, getMenuDetail } = require('../servic
 const { buildOrderFormUrl } = require('../services/formService');
 const {
   formatNumberedList,
+  welcomeMessage,
   mainMenuMessage,
   helpMessage,
   menuDetailMessage,
@@ -15,13 +16,7 @@ function kakaoResponse(text) {
   return {
     version: '2.0',
     template: {
-      outputs: [
-        {
-          simpleText: {
-            text,
-          },
-        },
-      ],
+      outputs: [{ simpleText: { text } }],
     },
   };
 }
@@ -41,8 +36,20 @@ async function handleWebhook(req, res) {
 
     logger.info(`[${userId}] message: "${text}"`);
 
-    if (!text || text === '0') {
-      resetSession(userId);
+    if (text === '0') {
+      const session = getSession(userId);
+      const wasOrderComplete = session.state === 'READY_TO_ORDER';
+      resetSession(userId, wasOrderComplete);
+      const msg = wasOrderComplete ? welcomeMessage() : mainMenuMessage();
+      return res.json(kakaoResponse(msg));
+    }
+
+    if (!text) {
+      const session = getSession(userId);
+      if (session.isFirstVisit) {
+        updateSession(userId, { isFirstVisit: false });
+        return res.json(kakaoResponse(welcomeMessage()));
+      }
       return res.json(kakaoResponse(mainMenuMessage()));
     }
 
@@ -50,6 +57,10 @@ async function handleWebhook(req, res) {
     logger.info(`[${userId}] state: ${session.state}`);
 
     if (session.state === 'MAIN') {
+      if (session.isFirstVisit) {
+        updateSession(userId, { isFirstVisit: false });
+        return res.json(kakaoResponse(welcomeMessage()));
+      }
       if (text === '1') {
         const region1List = await listRegion1();
         updateSession(userId, { state: 'SELECT_REGION_1' });
@@ -133,7 +144,7 @@ async function handleWebhook(req, res) {
     }
 
     if (session.state === 'READY_TO_ORDER') {
-      return res.json(kakaoResponse(['주문서 링크는 위에서 확인해주세요.', '', '0. 처음으로'].join('\n')));
+      return res.json(kakaoResponse(['주문서 링크는 위에서 확인해주세요.', '', '0. 처음으로 돌아가기'].join('\n')));
     }
 
     return res.json(kakaoResponse(mainMenuMessage()));
